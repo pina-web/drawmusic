@@ -192,6 +192,7 @@ body.m-photo .big-photo{height:38px;font-size:15px;padding:0 16px}
 @media (min-width:900px){ body.m-phone .wide-txt, body.m-photo .wide-txt{display:inline} body.m-phone .pagemenu, body.m-photo .pagemenu{top:126px;left:auto;width:560px} }
 body:not(.m-photo) .photoopts{display:none}
 #styleSeg{flex-wrap:wrap}
+.backup-btn{background:var(--accent-soft);border-color:#d9d2fb;color:#4b36b8;font-weight:700}
 .sep{width:1px;height:28px;background:var(--line);margin:0 2px}
 @media (max-width:600px){
   .pages{flex-basis:100%}
@@ -258,6 +259,10 @@ body:not(.m-photo) .photoopts{display:none}
     <button class="btn small" id="movL" title="앞으로 옮기기">◀ 앞으로</button>
     <button class="btn small" id="movR" title="뒤로 옮기기">뒤로 ▶</button>
     <button class="btn small" id="delPage" title="지금 장 삭제">장 삭제</button>
+  </div>
+  <div class="grp">
+    <button class="btn small backup-btn" id="pmBackup">📦 백업 내보내기</button>
+    <button class="btn small" id="pmLoad">📂 백업 불러오기</button>
   </div>
 </div>
 <div class="storyrow"><span class="storylbl" id="storyLbl">1장 이야기</span><input id="story" maxlength="60" placeholder="이 장의 이야기를 적어 보세요 (예: 아침에 일어나 창밖을 봤어요)"></div>
@@ -391,10 +396,11 @@ body:not(.m-photo) .photoopts{display:none}
     <button data-v="mono">흑백 악보</button>
   </div>
   <div class="sep"></div>
-  <button class="btn small" id="saveJson">작품 파일 저장</button>
-  <button class="btn small" id="loadJson">작품 불러오기</button>
+  <button class="btn small backup-btn" id="backupBtn">📦 백업 내보내기 (그림+악보+음악)</button>
+  <button class="btn small" id="saveJson">작품 파일만 저장</button>
+  <button class="btn small" id="loadJson">작품·백업 불러오기</button>
   <button class="btn small" id="demoBtn">예시 그림</button>
-  <input type="file" id="fileIn" accept=".json,application/json" hidden>
+  <input type="file" id="fileIn" accept=".json,.zip,application/json,application/zip" hidden>
 </div>
 <div class="scorebox"><canvas id="scoreView"></canvas></div>
 <p class="tip">아이폰·아이패드에서 소리가 안 나면 옆면의 무음 스위치를 꺼 주세요. 실제 악기 소리는 인터넷에서 처음 한 번 불러오고, 연결이 안 되면 기본 소리로 연주돼요.<br>음악 스타일의 반주(가요·트로트·재즈)는 연주에만 들어가고, 악보에는 그린 음만 들어가요.</p>
@@ -1534,12 +1540,139 @@ $("saveJson").onclick = ()=>{
   download(new Blob([JSON.stringify(data)],{type:"application/json"}), `${fileBase()}.json`); toast("작품 파일을 저장했어요");
 };
 $("loadJson").onclick = ()=>$("fileIn").click();
+$("backupBtn").onclick = exportBackup;
+$("pmBackup").onclick = ()=>{ document.body.classList.remove("pm-open"); exportBackup(); };
+$("pmLoad").onclick = ()=>{ document.body.classList.remove("pm-open"); $("fileIn").click(); };
 $("fileIn").onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
-  try{ const d=JSON.parse(await f.text()); if (!Array.isArray(d.strokes) && !Array.isArray(d.pages)) throw 0; pushHistory(); applySave(d); toast("작품을 불러왔어요"); }
-  catch(err){ toast("작품 파일을 읽을 수 없어요"); }
+  try{
+    let txt;
+    if (/\.zip$/i.test(f.name) || f.type.includes("zip")){ const u8=await readZipEntry(await f.arrayBuffer(), n=>/(^|\/)작품\.json$/.test(n) || /\.json$/i.test(n)); txt=new TextDecoder().decode(u8); }
+    else txt=await f.text();
+    const d=JSON.parse(txt); if (!Array.isArray(d.strokes) && !Array.isArray(d.pages)) throw 0;
+    pushHistory(); applySave(d); setMode(state.mode); toast(`작품을 불러왔어요 (${state.pages.length}장)`);
+  }
+  catch(err){ toast("작품 파일을 읽을 수 없어요. 그림 음악 놀이에서 저장한 .json이나 백업 .zip을 골라 주세요", 3500); }
   e.target.value="";
 };
+
+/* ============ 백업 (그림 + 악보 + 음악을 한 파일로) ============ */
+const CRC_T = (()=>{ const t=new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function makeZip(files){ // files: [{name, data:Uint8Array}] — 압축 없이 묶기
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+  const d=new Date(), dosT=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1), dosD=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  for (const f of files){
+    const nm=enc.encode(f.name), crc=crc32(f.data), sz=f.data.length;
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint16(8,0,true);
+    h.setUint16(10,dosT,true); h.setUint16(12,dosD,true); h.setUint32(14,crc,true); h.setUint32(18,sz,true); h.setUint32(22,sz,true);
+    h.setUint16(26,nm.length,true); h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer), nm, f.data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(10,0,true);
+    c.setUint16(12,dosT,true); c.setUint16(14,dosD,true); c.setUint32(16,crc,true); c.setUint32(20,sz,true); c.setUint32(24,sz,true);
+    c.setUint16(28,nm.length,true); c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer), nm);
+    off += 30+nm.length+sz;
+  }
+  const cdSize = central.reduce((a,x)=>a+x.length,0);
+  const e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cdSize,true); e.setUint32(16,off,true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], {type:"application/zip"});
+}
+async function readZipEntry(buf, want){ // 압축 파일 안에서 원하는 파일 꺼내기
+  const u8=new Uint8Array(buf), dv=new DataView(buf); let eo=-1;
+  for (let i=u8.length-22;i>=Math.max(0,u8.length-66000);i--) if (dv.getUint32(i,true)===0x06054b50){ eo=i; break; }
+  if (eo<0) throw new Error("zip");
+  let p=dv.getUint32(eo+16,true); const n=dv.getUint16(eo+10,true), dec=new TextDecoder();
+  for (let k=0;k<n;k++){
+    const method=dv.getUint16(p+10,true), csz=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), lo=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));
+    if (want(name)){
+      const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true), raw=u8.subarray(ds, ds+csz);
+      if (method===0) return raw;
+      if (method===8 && window.DecompressionStream){ const s=new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return new Uint8Array(await new Response(s).arrayBuffer()); }
+      throw new Error("method");
+    }
+    p += 46+nl+xl+cl;
+  }
+  throw new Error("missing");
+}
+function wavBytes(ab){ // AudioBuffer → 16비트 WAV
+  const ch=ab.numberOfChannels, len=ab.length, sr=ab.sampleRate, data=new DataView(new ArrayBuffer(44+len*ch*2));
+  const W=(o,s)=>{ for (let i=0;i<s.length;i++) data.setUint8(o+i,s.charCodeAt(i)); };
+  W(0,"RIFF"); data.setUint32(4,36+len*ch*2,true); W(8,"WAVE"); W(12,"fmt "); data.setUint32(16,16,true); data.setUint16(20,1,true);
+  data.setUint16(22,ch,true); data.setUint32(24,sr,true); data.setUint32(28,sr*ch*2,true); data.setUint16(32,ch*2,true); data.setUint16(34,16,true);
+  W(36,"data"); data.setUint32(40,len*ch*2,true);
+  const chans=[...Array(ch)].map((_,i)=>ab.getChannelData(i)); let o=44;
+  for (let i=0;i<len;i++) for (let c=0;c<ch;c++){ const v=Math.max(-1,Math.min(1,chans[c][i])); data.setInt16(o, v<0?v*0x8000:v*0x7FFF, true); o+=2; }
+  return new Uint8Array(data.buffer);
+}
+async function waitInstruments(ms=10000){
+  const t0=performance.now();
+  while (performance.now()-t0<ms){
+    const need=[...new Set([...state.instOf, ...styleInsts()])].filter(id=>INST[id].dir);
+    if (need.every(id=>buffers[id] && buffers[id].status!=="loading")) return;
+    await new Promise(r=>setTimeout(r,250));
+  }
+}
+async function renderSongAudio(){ // 곡 전체를 소리 파일로 만들기 (화면 재생과 같은 소리)
+  ensureAudio(); await waitInstruments();
+  const total=songSteps(), secs = total*stepDur() + 3, sr=44100;
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const off = new OAC(2, Math.ceil(secs*sr), sr);
+  const saveAc=ac, saveMaster=master;
+  const comp=off.createDynamicsCompressor(); comp.threshold.value=-14; comp.knee.value=12; comp.ratio.value=4; comp.attack.value=0.004; comp.release.value=0.2;
+  const m=off.createGain(); m.gain.value=0.8; m.connect(comp); comp.connect(off.destination);
+  ac=off; master=m;
+  try{ for (let st=0; st<total; st++) scheduleStep(st, 0.05 + st*stepDur()); }
+  finally{ ac=saveAc; master=saveMaster; }
+  return await off.startRendering();
+}
+async function pagePng(pi){
+  const pg=state.pages[pi];
+  if (pg.photo){ const im=new Image(); im.src=pg.photo; try{ await im.decode(); photoCache.set(pg.photo, im); }catch(e){} }
+  const sc=2, c=document.createElement("canvas"); c.width=Math.round(BW*sc); c.height=Math.round(BH*sc);
+  const g=c.getContext("2d"); g.scale(sc,sc);
+  drawGrid(g,BW,BH,{labels:false, pg}); drawStrokes(g,BW,BH,pg.strokes); drawRests(g,BW,BH,pg.rests||[],true);
+  if (pg.story){ g.font="600 16px -apple-system,'Apple SD Gothic Neo',sans-serif"; g.fillStyle="rgba(255,255,255,.85)"; const w=g.measureText(`${pi+1}장 · ${pg.story}`).width; g.fillRect(8,8,w+16,28); g.fillStyle="#6c55d9"; g.fillText(`${pi+1}장 · ${pg.story}`, 16, 28); }
+  return new Uint8Array(await (await canvasBlob(c)).arrayBuffer());
+}
+let backupBusy=false;
+async function exportBackup(){
+  if (backupBusy) return; backupBusy=true;
+  try{
+    if (playing) stop();
+    await fontsReady();
+    const files=[], enc=new TextEncoder(), P=n=>String(n).padStart(2,"0");
+    toast("백업 만드는 중… 그림 저장", 60000);
+    files.push({name:"작품.json", data:enc.encode(JSON.stringify({app:"drawmusic", v:2, savedAt:new Date().toISOString(), ...pickSave()}))});
+    for (let i=0;i<state.pages.length;i++) files.push({name:`그림/${P(i+1)}장.png`, data: await pagePng(i)});
+    toast("백업 만드는 중… 악보 저장", 60000);
+    const all=renderPages("all"); usedColors().forEach(c=>renderPages(String(c), all));
+    files.push({name:"악보/전체악보+파트보.pdf", data:new Uint8Array(await pagesToPdf(all).arrayBuffer())});
+    renderScoreView();
+    toast("백업 만드는 중… 음악 만들기 (곡 길이에 따라 잠시 걸려요)", 120000);
+    const audio = await renderSongAudio();
+    const styleName = state.style==="none" ? "그대로" : STYLE_NAMES[state.style];
+    files.push({name:`음악/${fileBase()}_${styleName}.wav`, data: wavBytes(audio)});
+    files.push({name:"읽어보기.txt", data:enc.encode(
+`${state.title} 백업 (${new Date().toLocaleString("ko-KR")})
+
+· 작품.json — 그림 음악 놀이에서 [작품 불러오기]로 이 백업 파일(.zip)을 고르면 그대로 다시 열려요.
+· 그림 폴더 — 장마다 그린 그림 (PNG)
+· 악보 폴더 — 전체 악보와 악기별 파트 악보 (PDF)
+· 음악 폴더 — 곡 전체를 연주한 소리 (WAV, ${styleName} 스타일 · 빠르기 ${state.bpm})
+
+총 ${state.pages.length}장 · ${totalBarsAll()}마디 · 약 ${songLenText()}
+`)});
+    const d=new Date(), ds=`${d.getFullYear()}${P(d.getMonth()+1)}${P(d.getDate())}`;
+    download(makeZip(files), `${fileBase()}_백업_${ds}.zip`);
+    toast("백업 파일(.zip)을 저장했어요 📦 그림·악보·음악이 모두 들어 있어요", 3500);
+  } catch(e){ console.error(e); toast("백업을 만들지 못했어요. 다시 한 번 눌러 주세요"); }
+  finally{ backupBusy=false; }
+}
 
 /* ============ 저장/복원 (브라우저) ============ */
 function pickSave(){ const {pages,page,playMode,style,accomp,mode,photoDensity,photoBg,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}=state; return {pages,page,playMode,style,accomp,mode,photoDensity,photoBg,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}; }
