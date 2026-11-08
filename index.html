@@ -100,13 +100,14 @@ body.m-touch .touch-only{display:inline-flex}
 @media (min-width:1100px){
   body.m-touch{display:grid;grid-template-columns:minmax(0,1fr) 410px;column-gap:20px;align-items:start}
   body.m-touch > *{grid-column:1 / -1}
-  body.m-touch > .stage{grid-column:1}
+  body.m-touch > .stage{grid-column:1;grid-row:span 2}
   body.m-touch > .panel{grid-column:2;margin-top:0}
+  body.m-touch > #settingsSheet{grid-column:2}
+  body.m-touch > #scoreSection{grid-column:1 / -1}
   body.m-touch .panel .row.spread{justify-content:flex-start}
   body.m-touch .card .row{gap:10px}
 }
-body.m-touch .card.adv, body.m-touch #scoreSection{display:none}
-body.m-touch.show-score #scoreSection{display:block}
+body.m-touch .card.adv{display:none}
 body.m-touch .btn{height:66px;min-width:66px;font-size:20px;border-radius:33px;padding:0 18px}
 body.m-touch .btn.icon{width:66px;padding:0}
 body.m-touch .btn svg{width:30px;height:30px}
@@ -127,6 +128,69 @@ body.m-touch .modebar button{height:52px;font-size:18px}
 body.m-touch .tempo{height:66px}
 body.m-touch .tempo button{height:66px;width:56px;font-size:26px}
 body.m-touch select{height:54px;font-size:18px}
+.pagebar{position:relative}
+.pagemenu{display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+body.pm-open .pagemenu{display:flex}
+.songinfo{font-size:13px;color:var(--muted)}
+.curinst{display:none}
+.sheet{display:none;position:fixed;inset:0;z-index:40;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;
+  padding:max(10px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.sheethead{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-10px;background:#fff;padding:6px 0 10px;z-index:2;font-size:17px}
+.sheetbody{display:flex;flex-direction:column;gap:10px}
+body.show-score #scoreSection, body.show-settings #settingsSheet{display:block}
+body.m-touch #settingsSheet{display:block;position:static;padding:0;overflow:visible;z-index:auto}
+body.m-touch #settingsSheet .sheethead{display:none}
+body.m-touch #settingsBtn{display:none}
+body.m-touch .pagemenu{display:flex}
+body.m-touch #pmBtn{display:none}
+
+/* 휴대폰·사진 모드: 화면 한 장에 꼭 맞추기 (스크롤 없음 → 실수로 점 찍힘 방지) */
+body.m-phone, body.m-photo{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;gap:6px;max-width:1100px;
+  padding:max(6px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+body.m-phone > *, body.m-photo > *{flex:none}
+body.m-phone .modebar, body.m-photo .modebar{margin:0;gap:4px}
+body.m-phone .modebar button, body.m-photo .modebar button{height:30px;font-size:12px;border-radius:9px}
+body.m-phone header, body.m-photo header{margin:0;gap:6px}
+body.m-phone header .logo, body.m-photo header .logo{width:26px;height:26px;font-size:14px;border-radius:8px}
+body.m-phone #title, body.m-photo #title{font-size:16px;padding:2px}
+body.m-phone .pagebar, body.m-photo .pagebar{margin:0;flex-wrap:nowrap;gap:6px}
+body.m-phone .pages, body.m-photo .pages{padding:2px}
+body.m-phone .pg canvas, body.m-photo .pg canvas{width:42px!important;height:28px!important;border-radius:4px}
+body.m-phone .pg, body.m-photo .pg{padding:2px;border-radius:8px}
+body.m-phone .pg span, body.m-photo .pg span{font-size:10px}
+body.m-phone .pagebar .btn, body.m-photo .pagebar .btn{height:34px;min-width:34px;padding:0 10px;flex:none}
+body.m-phone .pagemenu, body.m-photo .pagemenu{position:absolute;left:8px;right:8px;top:118px;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+body.m-phone .storyrow, body.m-photo .storyrow{margin:0}
+body.m-phone #story, body.m-photo #story{height:32px;font-size:14px}
+body.m-phone .storylbl, body.m-photo .storylbl{font-size:12px}
+body.m-phone .stage, body.m-photo .stage{flex:1 1 auto;min-height:120px}
+body.m-phone #board, body.m-photo #board{position:absolute;inset:0;width:100%;height:100%!important}
+body.m-phone .panel, body.m-photo .panel{margin:0;gap:4px}
+body.m-phone .panel .row.spread, body.m-photo .panel .row.spread{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+body.m-phone .panel .grp, body.m-photo .panel .grp{flex-wrap:nowrap;gap:5px}
+body.m-phone .panel .btn, body.m-photo .panel .btn{height:40px;min-width:40px;padding:0 10px;flex:none}
+body.m-phone .panel .btn.icon, body.m-photo .panel .btn.icon{width:40px;padding:0}
+body.m-phone .panel .btn.play, body.m-photo .panel .btn.play{width:46px;height:46px}
+body.m-phone .wide-txt, body.m-photo .wide-txt{display:none}
+body.m-phone .hide-shell, body.m-photo .hide-shell{display:none}
+body.m-phone .colors-wrap, body.m-photo .colors-wrap{padding:0;display:flex;align-items:center;gap:8px}
+body.m-phone .curinst, body.m-photo .curinst{display:block;font-size:11px;color:var(--muted);width:52px;flex:none;line-height:1.2;text-align:center}
+body.m-phone .colors, body.m-photo .colors{flex-wrap:nowrap;overflow-x:auto;gap:7px;padding:4px 3px;scrollbar-width:none}
+body.m-phone .cdot, body.m-photo .cdot{width:32px;height:32px;flex:none}
+body.m-phone .cdot .tag, body.m-photo .cdot .tag{display:none}
+body.m-phone .cdot.sel::after, body.m-photo .cdot.sel::after{inset:-4px;border-width:2px}
+body.m-photo .photopanel{padding:6px 8px;border-width:1px;margin:0;gap:6px}
+body.m-photo .photo-help{display:none}
+body.m-photo .big-photo{height:38px;font-size:15px;padding:0 16px}
+@media (max-width:420px){
+  body.m-phone .panel .btn, body.m-photo .panel .btn{height:36px;min-width:36px;padding:0 8px}
+  body.m-phone .panel .btn.icon, body.m-photo .panel .btn.icon{width:36px}
+  body.m-phone .panel .btn.play, body.m-photo .panel .btn.play{width:42px;height:42px}
+  body.m-phone .panel .grp, body.m-photo .panel .grp{gap:4px}
+  body.m-phone .btn svg, body.m-photo .btn svg{width:18px;height:18px}
+}
+@media (min-width:900px){ body.m-phone .wide-txt, body.m-photo .wide-txt{display:inline} body.m-phone .pagemenu, body.m-photo .pagemenu{top:126px;left:auto;width:560px} }
+body:not(.m-photo) .photoopts{display:none}
 .sep{width:1px;height:28px;background:var(--line);margin:0 2px}
 @media (max-width:600px){
   .pages{flex-basis:100%}
@@ -161,8 +225,8 @@ body.m-touch select{height:54px;font-size:18px}
     <button class="btn big-photo" id="photoBtn">📷 사진 넣기</button>
     <div class="photo-help">사진을 넣으면 사진 속 선과 색을 읽어서 바로 음악으로 바꿔요.<br>여러 장을 고르면 사진마다 한 장씩 이어진 곡이 돼요.</div>
   </div>
-  <div class="row">
-    <span class="lbl">음 개수</span>
+  <div class="row" id="photoOpts">
+    <span class="lbl">사진 음 개수</span>
     <div class="seg" id="photoDensity">
       <button data-v="1">적게</button>
       <button data-v="2" class="on">보통</button>
@@ -179,18 +243,20 @@ body.m-touch select{height:54px;font-size:18px}
 </div>
 <div class="pagebar">
   <div class="pages" id="pages"></div>
-  <div class="grp">
-    <button class="btn small" id="addPage" title="빈 장을 뒤에 추가">＋ 새 장</button>
-    <button class="btn small" id="dupPage" title="지금 장을 복사해서 바로 뒤에 넣기">⧉ 복제</button>
-    <button class="btn small" id="movL" title="앞으로 옮기기">◀</button>
-    <button class="btn small" id="movR" title="뒤로 옮기기">▶</button>
-    <button class="btn small" id="delPage" title="지금 장 삭제">장 삭제</button>
-  </div>
+  <button class="btn small" id="addPage" title="빈 장을 뒤에 추가">＋<span class="wide-txt"> 새 장</span></button>
+  <button class="btn small" id="pmBtn" title="장 메뉴">⋯<span class="wide-txt"> 장 메뉴</span></button>
 </div>
-<div class="songinfo"><span id="songInfo"></span>
+<div class="pagemenu" id="pageMenu">
+  <span class="songinfo" id="songInfo"></span>
   <div class="seg" id="modeSeg">
     <button data-v="song" class="on">▶ 처음부터 끝까지</button>
     <button data-v="page">🔁 이 장만 반복</button>
+  </div>
+  <div class="grp">
+    <button class="btn small" id="dupPage" title="지금 장을 복사해서 바로 뒤에 넣기">⧉ 복제</button>
+    <button class="btn small" id="movL" title="앞으로 옮기기">◀ 앞으로</button>
+    <button class="btn small" id="movR" title="뒤로 옮기기">뒤로 ▶</button>
+    <button class="btn small" id="delPage" title="지금 장 삭제">장 삭제</button>
   </div>
 </div>
 <div class="storyrow"><span class="storylbl" id="storyLbl">1장 이야기</span><input id="story" maxlength="60" placeholder="이 장의 이야기를 적어 보세요 (예: 아침에 일어나 창밖을 봤어요)"></div>
@@ -205,15 +271,16 @@ body.m-touch select{height:54px;font-size:18px}
       <button class="btn play" id="playBtn" title="재생/정지">▶</button>
       <button class="btn icon on" id="penBtn" title="펜"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></button>
       <button class="btn icon" id="eraserBtn" title="지우개"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M4.5 14.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 18H8z"/></svg></button>
-      <button class="btn" id="restBtn" title="쉼표 칸 지정: 누르고 옆으로 끌면 그 구간이 쉼표가 돼요. 쉼표 칸을 다시 누르면 풀려요"><span style="font-family:BravuraSub;font-size:30px;line-height:1;margin-top:2px">&#xE4E5;</span> 쉼표</button>
+      <button class="btn" id="restBtn" title="쉼표 칸 지정: 누르고 옆으로 끌면 그 구간이 쉼표가 돼요. 쉼표 칸을 다시 누르면 풀려요"><span style="font-family:BravuraSub;font-size:30px;line-height:1;margin-top:2px">&#xE4E5;</span><span class="wide-txt"> 쉼표</span></button>
       <button class="btn icon" id="undoBtn" title="되돌리기"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
       <button class="btn icon" id="redoBtn" title="다시하기"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
       <button class="btn icon" id="clearBtn" title="이 장 모두 지우기"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
-      <button class="btn touch-only" id="scoreToggle">🎼 악보</button>
+      <button class="btn" id="scoreToggle" title="악보 보기">🎼<span class="wide-txt"> 악보</span></button>
+      <button class="btn" id="settingsBtn" title="악기·스타일·조·빠르기 설정">⚙<span class="wide-txt"> 설정</span></button>
       <button class="btn touch-only" id="fsBtn">⛶ 전체화면</button>
-      <button class="btn icon" id="shuffleBtn" title="악기 섞기"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
+      <button class="btn icon hide-shell" id="shuffleBtn" title="악기 섞기"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
     </div>
-    <div class="grp">
+    <div class="grp" id="recGrp">
       <button class="btn rec" id="recBtn" title="연주 녹음해서 저장">● <span id="recLbl">녹음</span></button>
       <div class="tempo" title="빠르기">
         <button id="tDown">−</button><span id="tVal">90<small>BPM</small></span><button id="tUp">+</button>
@@ -221,7 +288,7 @@ body.m-touch select{height:54px;font-size:18px}
     </div>
   </div>
 
-  <div class="colors-wrap"><div class="colors" id="colors"></div></div>
+  <div class="colors-wrap"><span class="curinst" id="curInst"></span><div class="colors" id="colors"></div></div>
 
   <div class="card stylecard">
     <div class="row">
@@ -300,8 +367,12 @@ body.m-touch select{height:54px;font-size:18px}
   </div>
 </div>
 
-<div id="scoreSection">
-<h2>🎼 악보</h2>
+<div id="settingsSheet" class="sheet">
+  <div class="sheethead"><b>⚙ 설정</b><button class="btn small" data-close="show-settings">닫기 ✕</button></div>
+  <div class="sheetbody" id="settingsBody"></div>
+</div>
+<div id="scoreSection" class="sheet">
+<div class="sheethead"><b>🎼 악보</b><button class="btn small" data-close="show-score">닫기 ✕</button></div>
 <div class="row" style="margin-bottom:8px">
   <span class="lbl">보기</span>
   <div class="seg" id="scoreSel" style="flex-wrap:wrap"></div>
@@ -850,8 +921,15 @@ function stopRec(){ if (recorder && recorder.state!=="inactive") recorder.stop()
 /* ============ 그림판 ============ */
 const board=$("board"), bctx=board.getContext("2d");
 let BW=0, BH=0, DPR=1;
+let lastScrollT=0;
 function sizeBoard(){
   const w = $("stage").clientWidth;
+  if (state.mode!=="touch"){ // 휴대폰·사진: 남은 공간을 그림판이 꽉 채움
+    DPR = Math.min(3, window.devicePixelRatio||1);
+    BW=w; BH=Math.max(120, $("stage").clientHeight);
+    board.width=Math.round(BW*DPR); board.height=Math.round(BH*DPR);
+    drawBoard(); return;
+  }
   const vh = window.innerHeight;
   const h = state.mode==="touch" ? (window.innerWidth>=1100 ? Math.max(360, Math.round(vh - ($("stage").getBoundingClientRect().top + window.scrollY) - 24)) : Math.max(360, Math.round(vh - ($("stage").getBoundingClientRect().top + window.scrollY) - document.querySelector(".panel").offsetHeight - 40))) : w < 700 ? Math.min(Math.round(w*1.12), Math.round(vh*0.6)) : Math.min(Math.round(w*0.56), Math.round(vh*0.66));
   DPR = Math.min(3, window.devicePixelRatio||1);
@@ -973,7 +1051,9 @@ function eraseAt(p){
   return changed;
 }
 board.addEventListener("pointerdown", e=>{
-  e.preventDefault(); ensureAudio(); board.setPointerCapture(e.pointerId);
+  e.preventDefault();
+  if (performance.now()-lastScrollT < 350) return; // 화면을 넘기던 손가락이면 무시
+  if (document.body.classList.contains("pm-open")){ document.body.classList.remove("pm-open"); return; } // 메뉴 닫기만 ensureAudio(); board.setPointerCapture(e.pointerId);
   const p=posOf(e); pushHistory(); lastPrevRow=-1;
   if (state.tool==="pen"){ drawing={color:state.colorIdx, size:state.penSize, pts:[p]}; state.strokes.push(drawing); previewAt(p); drawBoard(); }
   else if (state.tool==="rest"){ const c=colOf(p[0]); drawing={rest:true, c0:c, c1:c}; drawBoard(); }
@@ -1547,7 +1627,7 @@ async function redoPhoto(){
 function syncStory(){ $("story").value = state.pages[state.page].story || ""; $("storyLbl").textContent = `${state.page+1}장 이야기`; }
 function setMode(m, save=true){
   state.mode = m;
-  document.body.classList.remove("m-phone","m-touch","m-photo","show-score");
+  document.body.classList.remove("m-phone","m-touch","m-photo","show-score","show-settings","pm-open");
   document.body.classList.add("m-"+m);
   document.querySelectorAll("#modeBar button").forEach(b=>b.classList.toggle("on", b.dataset.v===m));
   try{ window.history.replaceState(null, "", "#"+m); }catch(e){}
@@ -1563,6 +1643,7 @@ function refresh(){
 }
 function buildColors(){
   const box=$("colors"); box.innerHTML="";
+  $("curInst").textContent = INST[state.instOf[state.colorIdx]].name.replace(/\s*\(.*\)/,"").replace("그랜드 ","");
   COLORS.forEach((c,i)=>{
     const b=document.createElement("button"); b.className="cdot"+(i===state.colorIdx?" sel":""); b.style.background=c.c;
     b.title=INST[state.instOf[i]].name;
@@ -1689,7 +1770,18 @@ $("photoIn").onchange=e=>{ const fs=[...e.target.files]; e.target.value=""; addP
 $("photoRedo").onclick=redoPhoto;
 $("story").oninput=e=>{ state.pages[state.page].story=e.target.value; autosave(); clearTimeout(scoreT); scoreT=setTimeout(renderScoreView,500); };
 document.querySelectorAll("#modeBar button").forEach(b=>b.onclick=()=>setMode(b.dataset.v));
-$("scoreToggle").onclick=()=>{ document.body.classList.toggle("show-score"); if (document.body.classList.contains("show-score")){ renderScoreView(); $("scoreSection").scrollIntoView({behavior:"smooth"}); } };
+$("scoreToggle").onclick=()=>{ document.body.classList.remove("show-settings","pm-open"); document.body.classList.add("show-score"); buildScoreSel(); fontsReady().then(renderScoreView); };
+$("settingsBtn").onclick=()=>{ document.body.classList.remove("show-score","pm-open"); document.body.classList.add("show-settings"); };
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>document.body.classList.remove(b.dataset.close));
+$("pmBtn").onclick=e=>{ e.stopPropagation(); document.body.classList.toggle("pm-open"); };
+document.addEventListener("pointerdown", e=>{ if (document.body.classList.contains("pm-open") && !e.target.closest("#pageMenu") && !e.target.closest("#pmBtn")) document.body.classList.remove("pm-open"); });
+// 설정 창으로 옮기기
+{ const sb=$("settingsBody");
+  const recCard=document.createElement("div"); recCard.className="card"; const rr=document.createElement("div"); rr.className="row"; rr.appendChild($("recGrp")); recCard.appendChild(rr); sb.appendChild(recCard);
+  const po=document.createElement("div"); po.className="card photoopts"; po.appendChild($("photoOpts")); sb.appendChild(po);
+  document.querySelectorAll(".panel > .card").forEach(c=>sb.appendChild(c)); }
+if (window.ResizeObserver) new ResizeObserver(()=>{ if (state.mode!=="touch"){ clearTimeout(sizeBoard._r); sizeBoard._r=setTimeout(sizeBoard,60); } }).observe($("stage"));
+window.addEventListener("scroll", ()=>{ lastScrollT=performance.now(); }, {passive:true});
 $("fsBtn").onclick=()=>{ const el=document.documentElement; const rq=el.requestFullscreen||el.webkitRequestFullscreen; if (document.fullscreenElement||document.webkitFullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); } else if (rq){ Promise.resolve(rq.call(el)).catch(()=>toast("이 기기에서는 전체화면을 쓸 수 없어요")); } else toast("이 기기에서는 전체화면을 쓸 수 없어요"); };
 window.addEventListener("hashchange", ()=>{ const h=location.hash.slice(1); if (["phone","touch","photo"].includes(h) && h!==state.mode) setMode(h); });
 try{ const s=localStorage.getItem("drawmusic.v1"); if (s){ const d=JSON.parse(s); if (Array.isArray(d.strokes)||Array.isArray(d.pages)) applySave(d); } }catch(e){}
