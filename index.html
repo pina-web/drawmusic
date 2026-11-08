@@ -73,8 +73,19 @@ h2{font-size:17px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.pagebar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pages{display:flex;gap:6px;overflow-x:auto;max-width:100%;padding:4px 2px;min-width:0;flex:1}
+.pg{flex:none;border:2px solid var(--line);border-radius:10px;background:#fff;padding:3px;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pg canvas{display:block;width:64px;height:40px;border-radius:6px}
+.pg span{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pg.sel{border-color:var(--accent)}
+.pg.sel span{color:var(--accent);font-weight:700}
+.pg.playing::after{content:"♪";position:absolute;top:-6px;right:-4px;background:var(--accent);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:grid;place-items:center}
+.songinfo{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;color:var(--muted)}
+#restBtn.on{background:#55555f;color:#fff;border-color:#55555f}
 .sep{width:1px;height:28px;background:var(--line);margin:0 2px}
 @media (max-width:600px){
+  .pages{flex-basis:100%}
   body{padding:10px 10px 40px}
   .btn{height:42px;min-width:42px}
   .btn.icon{width:42px}
@@ -96,6 +107,22 @@ h2{font-size:17px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
   <span class="status" id="status">소리 준비 전</span>
 </header>
 
+<div class="pagebar">
+  <div class="pages" id="pages"></div>
+  <div class="grp">
+    <button class="btn small" id="addPage" title="빈 장을 뒤에 추가">＋ 새 장</button>
+    <button class="btn small" id="dupPage" title="지금 장을 복사해서 바로 뒤에 넣기">⧉ 복제</button>
+    <button class="btn small" id="movL" title="앞으로 옮기기">◀</button>
+    <button class="btn small" id="movR" title="뒤로 옮기기">▶</button>
+    <button class="btn small" id="delPage" title="지금 장 삭제">장 삭제</button>
+  </div>
+</div>
+<div class="songinfo"><span id="songInfo"></span>
+  <div class="seg" id="modeSeg">
+    <button data-v="song" class="on">▶ 처음부터 끝까지</button>
+    <button data-v="page">🔁 이 장만 반복</button>
+  </div>
+</div>
 <div class="stage" id="stage">
   <canvas id="board"></canvas>
   <div class="hint" id="hint">여기에 그림을 그려 보세요 ✏️<br>▶ 를 누르면 그림이 음악이 돼요</div>
@@ -107,9 +134,10 @@ h2{font-size:17px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
       <button class="btn play" id="playBtn" title="재생/정지">▶</button>
       <button class="btn icon on" id="penBtn" title="펜"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></button>
       <button class="btn icon" id="eraserBtn" title="지우개"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M4.5 14.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 18H8z"/></svg></button>
+      <button class="btn" id="restBtn" title="쉼표 칸 지정: 누르고 옆으로 끌면 그 구간이 쉼표가 돼요. 쉼표 칸을 다시 누르면 풀려요"><span style="font-family:BravuraSub;font-size:30px;line-height:1;margin-top:2px">&#xE4E5;</span> 쉼표</button>
       <button class="btn icon" id="undoBtn" title="되돌리기"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
       <button class="btn icon" id="redoBtn" title="다시하기"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
-      <button class="btn icon" id="clearBtn" title="모두 지우기"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+      <button class="btn icon" id="clearBtn" title="이 장 모두 지우기"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
       <button class="btn icon" id="shuffleBtn" title="악기 섞기"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
     </div>
     <div class="grp">
@@ -163,7 +191,7 @@ h2{font-size:17px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
         <button data-v="8" class="on">•• 보통</button>
         <button data-v="16">••• 촘촘</button>
       </div>
-      <span class="lbl">마디</span>
+      <span class="lbl">한 장 마디</span>
       <div class="seg" id="barsSeg">
         <button data-v="2">2</button>
         <button data-v="4" class="on">4</button>
@@ -186,7 +214,7 @@ h2{font-size:17px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
 <div class="row" style="margin-bottom:10px">
   <button class="btn small" id="savePng">악보 PNG 저장</button>
   <button class="btn small" id="savePdf">악보 PDF 저장</button>
-  <button class="btn small" id="saveDrawing">그림 PNG 저장</button>
+  <button class="btn small" id="saveDrawing">이 장 그림 PNG</button>
   <div class="seg" id="scoreColorSeg">
     <button data-v="color" class="on">색깔 악보</button>
     <button data-v="mono">흑백 악보</button>
@@ -254,12 +282,16 @@ const COLORS = [
 ];
 
 /* ============ 상태 ============ */
+const newPage = () => ({strokes:[], rests:[]});
 const state = {
-  strokes: [], colorIdx: 0, tool: "pen", penSize: 6,
+  pages: [newPage()], page: 0, playMode: "song", colorIdx: 0, tool: "pen", penSize: 6,
   bpm: 90, root: 0, scale: "major", octave: 3,
   spb: 8, bars: 4, merge: true, preview: true, labels: true,
   instOf: COLORS.map(x=>x.inst), title: "우리의 그림 음악", scoreColor: true,
 };
+Object.defineProperty(state, "strokes", { get(){ return state.pages[state.page].strokes; }, set(v){ state.pages[state.page].strokes=v; } });
+Object.defineProperty(state, "rests", { get(){ return state.pages[state.page].rests; }, set(v){ state.pages[state.page].rests=v; } });
+const MAX_PAGES = 40;
 const SCALES = { major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], penta:[0,2,4,7,9] };
 const NOTE_KO = ["도","도♯","레","레♯","미","파","파♯","솔","솔♯","라","라♯","시"];
 const NOTE_EN = ["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
@@ -292,12 +324,30 @@ function resample(pts, step){
   return out;
 }
 
+const songSteps = () => totalSteps() * state.pages.length;
+const totalBarsAll = () => state.bars * state.pages.length;
+// 쉼표 구간: [x0,x1] (0~1 비율) → 그 안의 열은 소리를 내지 않음
+const isRestCol = (rests, c) => { const x=c/totalSteps(); return rests.some(r=>x>=r[0]-1e-9 && x<=r[1]+1e-9); };
+function restColsOf(rests){ const N=totalSteps(), out=[]; for (let c=0;c<N;c++) out.push(isRestCol(rests,c)); return out; }
+
 let model = { cols:[], events:[], byStart:[] };
 function computeNotes(){
-  const N = totalSteps(), R = rowsCount();
+  const N = totalSteps(), P = state.pages.length;
+  const allCols=[], allEvents=[];
+  state.pages.forEach((pg, pi)=>{
+    const {cols, events} = pageNotes(pg);
+    cols.forEach(m=>allCols.push(m));
+    events.forEach(ev=>{ ev.start += pi*N; allEvents.push(ev); });
+  });
+  const byStart = Array.from({length:N*P}, ()=>[]);
+  allEvents.forEach(ev=>byStart[ev.start].push(ev));
+  model = { cols:allCols, events:allEvents, byStart };
+}
+function pageNotes(pg){
+  const N = totalSteps();
   const cols = Array.from({length:N}, ()=>new Map());
   const add = (c, color, row) => { const key=color+"|"+row; if(!cols[c].has(key)) cols[c].set(key,{color,row}); };
-  for (const s of state.strokes){
+  for (const s of pg.strokes){
     const pts = resample(s.pts, 0.0025);
     let i=0;
     while (i < pts.length){
@@ -322,6 +372,9 @@ function computeNotes(){
       i = j+1;
     }
   }
+  // 쉼표 칸은 비우기
+  const rc = restColsOf(pg.rests||[]);
+  rc.forEach((r,c)=>{ if (r) cols[c].clear(); });
   // 이벤트(길이 포함)
   const events=[]; const keys=new Set();
   cols.forEach(m=>m.forEach((v,k)=>keys.add(k)));
@@ -335,9 +388,7 @@ function computeNotes(){
       c=e+1;
     }
   }
-  const byStart = Array.from({length:N}, ()=>[]);
-  events.forEach(ev=>byStart[ev.start].push(ev));
-  model = { cols, events, byStart };
+  return {cols, events};
 }
 
 /* ============ 오디오 ============ */
@@ -500,10 +551,19 @@ function scheduleStep(step, t){
     playNote(state.instOf[ev.color], ev.midi, t, d, vel);
   }
 }
+let endAt=0;
 function tick(){
   if (!playing) return;
+  if (endAt){ if (ac.currentTime >= endAt) stop(); return; }
+  const N=totalSteps();
   while (nextTime < ac.currentTime + 0.12){
-    if (curStep >= totalSteps()) curStep = 0;
+    if (state.playMode==="page"){
+      const lo=state.page*N;
+      if (curStep < lo || curStep >= lo+N) curStep = lo;
+    } else if (curStep >= songSteps()){
+      if (recorder){ endAt = nextTime + 1.8; return; } // 녹음 중이면 곡 끝에서 멈춤
+      curStep = 0;
+    }
     scheduleStep(curStep, nextTime);
     stepQueue.push({step:curStep, time:nextTime});
     nextTime += stepDur(); curStep++;
@@ -511,19 +571,29 @@ function tick(){
 }
 function play(){
   ensureAudio(); if (playing) return;
-  playing=true; curStep=0; stepQueue=[]; nextTime = ac.currentTime+0.08;
+  playing=true; endAt=0; curStep = state.playMode==="page" ? state.page*totalSteps() : 0; stepQueue=[]; nextTime = ac.currentTime+0.08;
   timer = setInterval(tick, 25); tick();
   $("playBtn").textContent="❚❚"; $("playBtn").classList.add("on");
   requestAnimationFrame(loop);
 }
 function stop(){
-  playing=false; clearInterval(timer); stepQueue=[];
+  playing=false; endAt=0; clearInterval(timer); stepQueue=[];
   $("playBtn").textContent="▶"; $("playBtn").classList.remove("on");
   if (recorder) stopRec();
-  drawBoard();
+  playingPage=-1; markPlayingPage(); drawBoard();
 }
+let playingPage=-1;
+function markPlayingPage(){ document.querySelectorAll(".pg").forEach((el,i)=>el.classList.toggle("playing", i===playingPage)); }
 function loop(){
   if (!playing) return;
+  const ph = playheadInfo();
+  if (ph){
+    const pp = Math.floor(ph.step/totalSteps());
+    if (pp!==playingPage){ playingPage=pp; markPlayingPage();
+      // 곡 전체 재생 중에는 연주하는 장을 따라가기 (그리는 중엔 그대로)
+      if (state.playMode==="song" && !drawing && pp!==state.page && pp<state.pages.length){ state.page=pp; renderPageStrip(); }
+    }
+  }
   drawBoard(); requestAnimationFrame(loop);
 }
 function playheadInfo(){
@@ -532,7 +602,8 @@ function playheadInfo(){
   while (stepQueue.length>1 && stepQueue[1].time <= now) stepQueue.shift();
   const q = stepQueue[0]; if (!q || q.time > now) return null;
   const frac = Math.min(1, (now-q.time)/stepDur());
-  return { step:q.step, x:(q.step+frac)/totalSteps(), since: now-q.time };
+  const N=totalSteps(), local=q.step % N;
+  return { step:q.step, page:Math.floor(q.step/N), local, x:(local+frac)/N, since: now-q.time };
 }
 
 /* ============ 녹음 ============ */
@@ -612,17 +683,39 @@ function drawStrokes(g, W, H, strokes){
     const l=s.pts[s.pts.length-1]; g.lineTo(l[0]*W, l[1]*H); g.stroke();
   }
 }
+function restRange(r){ // 비율 구간 → 화면 좌우 (열 경계 기준)
+  const N=totalSteps(); return [Math.max(0,(r[0]*N-0.5)/N), Math.min(1,(r[1]*N+0.5)/N)];
+}
+function drawRests(g, W, H, rests, small){
+  for (const r of rests){
+    const [a,b]=restRange(r), x=a*W, w=(b-a)*W;
+    g.fillStyle="rgba(255,255,255,0.72)"; g.fillRect(x,0,w,H);
+    g.save(); g.beginPath(); g.rect(x,0,w,H); g.clip();
+    g.strokeStyle="rgba(120,120,135,0.22)"; g.lineWidth=1;
+    for (let k=-H;k<w;k+=10){ g.beginPath(); g.moveTo(x+k,H); g.lineTo(x+k+H,0); g.stroke(); }
+    g.restore();
+    g.strokeStyle="rgba(100,100,115,0.5)"; g.setLineDash([4,4]); g.strokeRect(x+0.5,0.5,w-1,H-1); g.setLineDash([]);
+    if (!small){
+      g.fillStyle="#55555f"; g.textAlign="center"; g.textBaseline="top";
+      g.font="30px BravuraSub"; g.fillText("", x+w/2, 8);
+      g.font="12px -apple-system,sans-serif"; g.fillText("쉼", x+w/2, 46);
+      g.textAlign="left";
+    }
+  }
+}
 function drawBoard(){
   const g=bctx; g.setTransform(DPR,0,0,DPR,0,0);
   drawGrid(g, BW, BH, {labels:state.labels});
   drawStrokes(g, BW, BH, state.strokes);
+  drawRests(g, BW, BH, state.rests);
+  if (drawing && drawing.rest){ const a=Math.min(drawing.c0,drawing.c1)/totalSteps(), b=Math.max(drawing.c0,drawing.c1)/totalSteps(); drawRests(g,BW,BH,[[a,b]]); }
   const ph = playheadInfo();
-  if (ph){
+  if (ph && ph.page===state.page){
     const x = ph.x*BW;
     g.strokeStyle="rgba(29,29,31,0.85)"; g.lineWidth=2; g.beginPath(); g.moveTo(x,0); g.lineTo(x,BH); g.stroke();
     const col = model.cols[ph.step];
     if (col && ph.since < Math.max(0.12, stepDur()*0.9)){
-      const gx = ph.step/totalSteps()*BW, fade = 1 - ph.since/Math.max(0.12, stepDur()*0.9);
+      const gx = ph.local/totalSteps()*BW, fade = 1 - ph.since/Math.max(0.12, stepDur()*0.9);
       col.forEach(v=>{
         const y=rowY(v.row)*BH;
         g.globalAlpha = 0.25*fade; g.fillStyle=COLORS[v.color].c; g.beginPath(); g.arc(gx,y,14,0,Math.PI*2); g.fill();
@@ -631,12 +724,13 @@ function drawBoard(){
       g.globalAlpha=1;
     }
   }
-  $("hint").style.display = state.strokes.length ? "none" : "flex";
+  $("hint").style.display = (state.strokes.length || state.rests.length) ? "none" : "flex";
 }
 
 /* 그리기 입력 */
 let drawing=null, history=[], future=[], lastPrevRow=-1, lastPrevT=0;
-const snapshot = () => JSON.stringify(state.strokes);
+const snapshot = () => JSON.stringify({pages:state.pages, page:state.page});
+function restoreSnap(s){ const d=JSON.parse(s); state.pages=d.pages; state.page=Math.min(d.page, d.pages.length-1); renderPageStrip(); refresh(); }
 function pushHistory(){ history.push(snapshot()); if (history.length>80) history.shift(); future=[]; }
 function posOf(e){ const r=board.getBoundingClientRect(); return [Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)), Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))]; }
 function previewAt(p){
@@ -663,22 +757,35 @@ board.addEventListener("pointerdown", e=>{
   e.preventDefault(); ensureAudio(); board.setPointerCapture(e.pointerId);
   const p=posOf(e); pushHistory(); lastPrevRow=-1;
   if (state.tool==="pen"){ drawing={color:state.colorIdx, size:state.penSize, pts:[p]}; state.strokes.push(drawing); previewAt(p); drawBoard(); }
+  else if (state.tool==="rest"){ const c=colOf(p[0]); drawing={rest:true, c0:c, c1:c}; drawBoard(); }
   else { drawing={erasing:true, changed:eraseAt(p)}; }
 });
+function finishRest(d){
+  const N=totalSteps(), a=Math.min(d.c0,d.c1), b=Math.max(d.c0,d.c1);
+  const hit = state.rests.findIndex(r=>isRestCol([r],a));
+  if (a===b && hit>=0){ state.rests.splice(hit,1); toast("쉼표를 풀었어요"); return; }
+  // 겹치는 구간은 하나로 합치기
+  let lo=a/N, hi=b/N;
+  state.rests = state.rests.filter(r=>{ if (r[1] < lo-1.01/N || r[0] > hi+1.01/N) return true; lo=Math.min(lo,r[0]); hi=Math.max(hi,r[1]); return false; });
+  state.rests.push([lo,hi]); state.rests.sort((x,y)=>x[0]-y[0]);
+}
 board.addEventListener("pointermove", e=>{
   if (!drawing) return; e.preventDefault();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   for (const ev of evs){
     const p=posOf(ev);
-    if (drawing.erasing){ if (eraseAt(p)) drawing.changed=true; }
+    if (drawing.rest){ drawing.c1=colOf(p[0]); }
+    else if (drawing.erasing){ if (eraseAt(p)) drawing.changed=true; }
     else { const l=drawing.pts[drawing.pts.length-1]; if (Math.hypot((p[0]-l[0])*BW,(p[1]-l[1])*BH) > 1.5) drawing.pts.push(p); }
   }
-  if (!drawing.erasing){ previewAt(posOf(e)); if (!playing) drawBoard(); }
+  if (drawing.rest){ if (!playing) drawBoard(); }
+  else if (!drawing.erasing){ previewAt(posOf(e)); if (!playing) drawBoard(); }
 });
 const endDraw = ()=>{
   if (!drawing) return;
   if (drawing.erasing && !drawing.changed) history.pop();
-  drawing=null; refresh();
+  if (drawing.rest) finishRest(drawing);
+  drawing=null; refresh(); renderPageStrip();
 };
 board.addEventListener("pointerup", endDraw);
 board.addEventListener("pointercancel", endDraw);
@@ -747,25 +854,41 @@ const PAGE_W=1240, PAGE_H=1754, MARGIN=78, S=11;
 const SYS_H = 6*S + 4*S + 8*S + 4*S + 7*S; // 위여백, 높은음자리, 사이, 낮은음자리, 아래여백
 function barsPerSystem(){ return state.spb===16 ? 2 : 4; }
 
-function makeThumb(w){
-  const h = Math.round(w*BH/BW);
+function makeThumb(w, pi=state.page, h){
+  h = h || Math.round(w*BH/BW);
+  const pg = state.pages[pi];
   const c=document.createElement("canvas"); c.width=w*2; c.height=h*2;
   const g=c.getContext("2d"); g.scale(2,2);
-  drawGrid(g,w,h,{labels:false}); drawStrokes(g,w,h,state.strokes);
+  drawGrid(g,w,h,{labels:false}); drawStrokes(g,w,h,pg.strokes); drawRests(g,w,h,pg.rests||[],true);
   g.strokeStyle="#e2e2e8"; g.lineWidth=1; g.strokeRect(0.5,0.5,w-1,h-1);
   return {c,w,h};
 }
+function headerThumbs(maxW){ // 장 그림을 작은 칸으로 모아 하나의 이미지로
+  const n=Math.min(state.pages.length, 8), cols=Math.min(n,4), rows=Math.ceil(n/cols), gap=6;
+  let tw=(maxW-(cols-1)*gap)/cols, th=tw*BH/BW;
+  const maxH = n===1 ? 220 : 90; if (th>maxH){ th=maxH; tw=th*BW/BH; }
+  const W=cols*tw+(cols-1)*gap, H=rows*th+(rows-1)*gap + (state.pages.length>1?18:0);
+  const c=document.createElement("canvas"); c.width=W*2; c.height=H*2; const g=c.getContext("2d"); g.scale(2,2);
+  for (let i=0;i<n;i++){
+    const t=makeThumb(Math.round(tw), i, Math.round(th));
+    g.drawImage(t.c, (i%cols)*(tw+gap), Math.floor(i/cols)*(th+gap), tw, th);
+  }
+  if (state.pages.length>1){ g.fillStyle="#9a9aa3"; g.font="12px -apple-system,sans-serif"; g.textAlign="right";
+    g.fillText(state.pages.length>8 ? `1~8장 (총 ${state.pages.length}장)` : `총 ${state.pages.length}장`, W, H-3); }
+  return {c, w:W, h:H};
+}
+function songLenText(){ const sec=Math.round(songSteps()*stepDur()); return sec>=60 ? `${Math.floor(sec/60)}분 ${sec%60}초` : `${sec}초`; }
 function drawHeader(g, y){
-  const thumb = makeThumb(300);
+  const thumb = headerThumbs(300);
   const x0=MARGIN;
   g.fillStyle="#1d1d1f"; g.textBaseline="alphabetic";
   g.font=`700 40px -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
   g.fillText(state.title || "그림 음악", x0, y+46);
   g.font=`19px -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif`; g.fillStyle="#6b6b75";
   const d=new Date(); const ds=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`;
-  g.fillText(`${keyLabel()}  ·  ♩ = ${state.bpm}  ·  4/4  ·  ${state.bars}마디  ·  ${ds}`, x0, y+84);
+  g.fillText(`${keyLabel()}  ·  ♩ = ${state.bpm}  ·  4/4  ·  ${totalBarsAll()}마디 (${state.pages.length}장)  ·  ${songLenText()}  ·  ${ds}`, x0, y+84);
   // 악기 범례
-  const used=[...new Set(state.strokes.map(s=>s.color))].sort((a,b)=>a-b);
+  const used=[...new Set(state.pages.flatMap(pg=>pg.strokes.map(s=>s.color)))].sort((a,b)=>a-b);
   let lx=x0, ly=y+124; g.font=`18px -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
   const maxX = PAGE_W - MARGIN - thumb.w - 30;
   for (const ci of used){
@@ -781,7 +904,7 @@ function drawHeader(g, y){
 
 function drawSystem(g, sysIdx, top, model2, opts){
   const {parts, fifths, spb, u} = model2;
-  const bps = barsPerSystem(), totalBars = state.bars;
+  const bps = barsPerSystem(), totalBars = totalBarsAll();
   const firstBar = sysIdx*bps, nBars = Math.min(bps, totalBars-firstBar);
   const tTop = top + 6*S, bTop = tTop + 4*S + 8*S;
   const x0 = MARGIN, xFull = PAGE_W - MARGIN;
@@ -925,7 +1048,7 @@ function drawSystem(g, sysIdx, top, model2, opts){
   }
 }
 
-function scoreSystemsCount(){ return Math.ceil(state.bars/barsPerSystem()); }
+function scoreSystemsCount(){ return Math.ceil(totalBarsAll()/barsPerSystem()); }
 
 function renderScoreView(){
   const m2 = scoreParts(), cv=$("scoreView"), n=scoreSystemsCount();
@@ -1002,8 +1125,8 @@ $("savePdf").onclick = async ()=>{
 };
 $("saveDrawing").onclick = async ()=>{
   const sc=2, c=document.createElement("canvas"); c.width=BW*sc; c.height=BH*sc;
-  const g=c.getContext("2d"); g.scale(sc,sc); drawGrid(g,BW,BH,{labels:false}); drawStrokes(g,BW,BH,state.strokes);
-  download(await canvasBlob(c), `${fileBase()}_그림.png`); toast("그림을 저장했어요");
+  const g=c.getContext("2d"); g.scale(sc,sc); drawGrid(g,BW,BH,{labels:false}); drawStrokes(g,BW,BH,state.strokes); drawRests(g,BW,BH,state.rests,true);
+  download(await canvasBlob(c), `${fileBase()}_${state.page+1}장_그림.png`); toast("그림을 저장했어요");
 };
 $("saveJson").onclick = ()=>{
   const data = {app:"drawmusic", v:1, ...pickSave()};
@@ -1012,15 +1135,19 @@ $("saveJson").onclick = ()=>{
 $("loadJson").onclick = ()=>$("fileIn").click();
 $("fileIn").onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
-  try{ const d=JSON.parse(await f.text()); if (!Array.isArray(d.strokes)) throw 0; pushHistory(); applySave(d); toast("작품을 불러왔어요"); }
+  try{ const d=JSON.parse(await f.text()); if (!Array.isArray(d.strokes) && !Array.isArray(d.pages)) throw 0; pushHistory(); applySave(d); toast("작품을 불러왔어요"); }
   catch(err){ toast("작품 파일을 읽을 수 없어요"); }
   e.target.value="";
 };
 
 /* ============ 저장/복원 (브라우저) ============ */
-function pickSave(){ const {strokes,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}=state; return {strokes,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}; }
+function pickSave(){ const {pages,page,playMode,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}=state; return {pages,page,playMode,bpm,root,scale,octave,spb,bars,merge,instOf,title,penSize}; }
 function applySave(d){
-  ["strokes","bpm","root","scale","octave","spb","bars","merge","title","penSize"].forEach(k=>{ if (d[k]!==undefined) state[k]=d[k]; });
+  ["bpm","root","scale","octave","spb","bars","merge","title","penSize","playMode"].forEach(k=>{ if (d[k]!==undefined) state[k]=d[k]; });
+  if (Array.isArray(d.pages) && d.pages.length) state.pages = d.pages.map(pg=>({strokes:pg.strokes||[], rests:pg.rests||[]}));
+  else if (Array.isArray(d.strokes)) state.pages = [{strokes:d.strokes, rests:[]}];
+  state.page = Math.max(0, Math.min(state.pages.length-1, d.page||0));
+  renderPageStrip();
   if (Array.isArray(d.instOf)) state.instOf = COLORS.map((c,i)=> INST[d.instOf[i]] ? d.instOf[i] : c.inst);
   if (state.scale==="major" && state.root===6) state.root=7;
   syncUI(); if (ac) state.instOf.forEach(loadInst); refresh();
@@ -1031,7 +1158,7 @@ function autosave(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ localStora
 /* ============ UI ============ */
 let scoreT=null;
 function refresh(){
-  computeNotes(); drawBoard(); autosave();
+  computeNotes(); drawBoard(); autosave(); updateSongInfo();
   clearTimeout(scoreT); scoreT=setTimeout(()=>fontsReady().then(renderScoreView), 250);
 }
 function buildColors(){
@@ -1073,7 +1200,7 @@ function segInit(id, cb){ $(id).querySelectorAll("button").forEach(b=>b.onclick=
 function segSet(id, val){ $(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v==String(val))); }
 function syncUI(){
   $("title").value=state.title; $("tVal").innerHTML=`${state.bpm}<small>BPM</small>`;
-  segSet("scaleSeg",state.scale); segSet("spbSeg",state.spb); segSet("barsSeg",state.bars); segSet("mergeSeg",state.merge?1:0);
+  segSet("scaleSeg",state.scale); segSet("spbSeg",state.spb); segSet("barsSeg",state.bars); segSet("mergeSeg",state.merge?1:0); segSet("modeSeg",state.playMode);
   segSet("penSize",state.penSize); segSet("scoreColorSeg", state.scoreColor?"color":"mono");
   $("optSeg").querySelector('[data-v="preview"]').classList.toggle("on",state.preview);
   $("optSeg").querySelector('[data-v="labels"]').classList.toggle("on",state.labels);
@@ -1084,21 +1211,45 @@ function syncUI(){
   $("keyName").textContent = keyLabel() + `  ·  ${state.octave+1}옥타브`;
   buildColors(); syncInstSel();
 }
-function setTool(t){ state.tool=t; $("penBtn").classList.toggle("on",t==="pen"); $("eraserBtn").classList.toggle("on",t==="eraser"); board.style.cursor = t==="pen"?"crosshair":"cell"; }
+function setTool(t){ state.tool=t; $("penBtn").classList.toggle("on",t==="pen"); $("eraserBtn").classList.toggle("on",t==="eraser"); $("restBtn").classList.toggle("on",t==="rest"); board.style.cursor = t==="pen"?"crosshair":t==="rest"?"col-resize":"cell";
+  if (t==="rest") toast("쉼표: 쉬고 싶은 곳을 옆으로 끌어 주세요. 쉼표 칸을 톡 누르면 풀려요", 3200); }
+function renderPageStrip(){
+  const box=$("pages"); box.innerHTML="";
+  state.pages.forEach((pg,i)=>{
+    const b=document.createElement("button"); b.className="pg"+(i===state.page?" sel":"")+(i===playingPage?" playing":"");
+    const t=makeThumb(64, i, 40); t.c.style.width="64px"; t.c.style.height="40px"; b.appendChild(t.c);
+    const sp=document.createElement("span"); sp.textContent=`${i+1}장`; b.appendChild(sp);
+    b.onclick=()=>{ if (state.page===i) return; state.page=i; renderPageStrip(); drawBoard(); autosave(); };
+    box.appendChild(b);
+  });
+  const sel=box.children[state.page]; if (sel && sel.scrollIntoView) sel.scrollIntoView({block:"nearest", inline:"nearest"});
+  $("delPage").disabled = state.pages.length<=1;
+  updateSongInfo();
+}
+function updateSongInfo(){
+  $("songInfo").textContent = `지금 ${state.page+1}장 / 총 ${state.pages.length}장 · ${totalBarsAll()}마디 · 약 ${songLenText()}`;
+}
 
 $("playBtn").onclick=()=> playing?stop():play();
 $("penBtn").onclick=()=>setTool("pen");
 $("eraserBtn").onclick=()=>setTool("eraser");
-$("undoBtn").onclick=()=>{ if(!history.length) return; future.push(snapshot()); state.strokes=JSON.parse(history.pop()); refresh(); };
-$("redoBtn").onclick=()=>{ if(!future.length) return; history.push(snapshot()); state.strokes=JSON.parse(future.pop()); refresh(); };
-$("clearBtn").onclick=()=>{ if(!state.strokes.length) return; pushHistory(); state.strokes=[]; refresh(); toast("모두 지웠어요 (되돌리기 가능)"); };
+$("undoBtn").onclick=()=>{ if(!history.length) return; future.push(snapshot()); restoreSnap(history.pop()); };
+$("redoBtn").onclick=()=>{ if(!future.length) return; history.push(snapshot()); restoreSnap(future.pop()); };
+$("restBtn").onclick=()=>setTool(state.tool==="rest"?"pen":"rest");
+$("addPage").onclick=()=>{ if (state.pages.length>=MAX_PAGES) return toast(`최대 ${MAX_PAGES}장까지 만들 수 있어요`); pushHistory(); state.pages.splice(state.page+1,0,newPage()); state.page++; renderPageStrip(); refresh(); toast(`${state.page+1}장을 새로 만들었어요`); };
+$("dupPage").onclick=()=>{ if (state.pages.length>=MAX_PAGES) return toast(`최대 ${MAX_PAGES}장까지 만들 수 있어요`); pushHistory(); state.pages.splice(state.page+1,0,JSON.parse(JSON.stringify(state.pages[state.page]))); state.page++; renderPageStrip(); refresh(); toast("같은 장을 하나 더 만들었어요 (되풀이 부분에 좋아요)"); };
+$("delPage").onclick=()=>{ if (state.pages.length<=1) return; pushHistory(); state.pages.splice(state.page,1); state.page=Math.min(state.page, state.pages.length-1); renderPageStrip(); refresh(); toast("장을 지웠어요 (되돌리기 가능)"); };
+$("movL").onclick=()=>{ const i=state.page; if (i<=0) return; pushHistory(); [state.pages[i-1],state.pages[i]]=[state.pages[i],state.pages[i-1]]; state.page--; renderPageStrip(); refresh(); };
+$("movR").onclick=()=>{ const i=state.page; if (i>=state.pages.length-1) return; pushHistory(); [state.pages[i+1],state.pages[i]]=[state.pages[i],state.pages[i+1]]; state.page++; renderPageStrip(); refresh(); };
+segInit("modeSeg", v=>{ state.playMode=v; segSet("modeSeg",v); autosave(); if (playing){ stop(); play(); } });
+$("clearBtn").onclick=()=>{ if(!state.strokes.length && !state.rests.length) return; pushHistory(); state.strokes=[]; state.rests=[]; refresh(); renderPageStrip(); toast("이 장을 모두 지웠어요 (되돌리기 가능)"); };
 $("shuffleBtn").onclick=()=>{
   const pool=Object.keys(INST).filter(k=>k!=="drums");
   state.instOf = state.instOf.map((v,i)=> v==="drums" ? v : pool[Math.floor(Math.random()*pool.length)]);
   ensureAudio(); state.instOf.forEach(loadInst); buildColors(); syncInstSel(); refresh(); toast("악기를 새로 섞었어요 🎲");
 };
 $("recBtn").onclick=()=> recorder ? stopRec() : startRec();
-const setBpm=v=>{ state.bpm=Math.max(40,Math.min(200,v)); $("tVal").innerHTML=`${state.bpm}<small>BPM</small>`; autosave(); clearTimeout(scoreT); scoreT=setTimeout(renderScoreView,300); };
+const setBpm=v=>{ state.bpm=Math.max(40,Math.min(200,v)); $("tVal").innerHTML=`${state.bpm}<small>BPM</small>`; autosave(); updateSongInfo(); clearTimeout(scoreT); scoreT=setTimeout(renderScoreView,300); };
 $("tDown").onclick=()=>setBpm(state.bpm-5); $("tUp").onclick=()=>setBpm(state.bpm+5);
 $("tryBtn").onclick=()=>{ ensureAudio(); previewChord(); };
 $("octUp").onclick=()=>{ if(state.octave<5){ state.octave++; syncUI(); refresh(); ensureAudio(); previewChord(); } };
@@ -1118,7 +1269,7 @@ $("demoBtn").onclick=()=>{
   for (let i=0;i<=60;i++){ const t=i/60; up.push([0.05+t*0.42, 0.55-0.35*t + 0.04*Math.sin(t*Math.PI*4)]); }
   for (let i=0;i<=80;i++){ const a=i/80*Math.PI*2; sun.push([0.74+0.11*Math.cos(a), 0.3+0.17*Math.sin(a)]); }
   state.strokes=[{color:4,size:6,pts:wave},{color:0,size:6,pts:up},{color:3,size:6,pts:sun}];
-  refresh(); toast("예시 그림이에요. ▶ 를 눌러 들어 보세요");
+  refresh(); renderPageStrip(); toast("예시 그림이에요. ▶ 를 눌러 들어 보세요");
 };
 document.addEventListener("keydown", e=>{
   if (e.target.tagName==="INPUT") return;
@@ -1128,8 +1279,8 @@ document.addEventListener("keydown", e=>{
 window.addEventListener("resize", ()=>{ clearTimeout(sizeBoard._t); sizeBoard._t=setTimeout(sizeBoard,120); });
 
 /* ============ 시작 ============ */
-buildInstSel(); buildKeys();
-try{ const s=localStorage.getItem("drawmusic.v1"); if (s){ const d=JSON.parse(s); if (Array.isArray(d.strokes)) applySave(d); } }catch(e){}
+buildInstSel(); buildKeys(); renderPageStrip();
+try{ const s=localStorage.getItem("drawmusic.v1"); if (s){ const d=JSON.parse(s); if (Array.isArray(d.strokes)||Array.isArray(d.pages)) applySave(d); } }catch(e){}
 syncUI(); sizeBoard(); refresh();
 })();
 </script>
